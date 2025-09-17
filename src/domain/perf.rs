@@ -1,4 +1,4 @@
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize};
 
 pub fn parse_row_no<'de, D>(deserializer: D) -> Result<Option<i64>, D::Error>
 where
@@ -36,4 +36,44 @@ pub struct PerfRow {
     pub baseline_avg_tps: Option<f64>,
     pub test_result_text: Option<String>,
     pub remark_text: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct PerfRunFilter {
+    pub release_tag: Option<String>,
+    pub test_scenario: Option<String>,
+    pub min_p95_latency_ms: Option<f64>,
+    pub max_p95_latency_ms: Option<f64>,
+    pub min_avg_tps: Option<f64>,
+    pub max_avg_tps: Option<f64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PerfSummary {
+    pub total_runs: usize,
+    pub avg_tps: Option<f64>,
+    pub avg_latency_ms: Option<f64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PerfTrends {
+    pub trend_points: Vec<(String, f64)>, // (label, value)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PerfRowUpdate {
+    pub test_scenario: Option<String>,
+    pub p95_latency_ms: Option<f64>,
+    pub avg_tps: Option<f64>,
+    pub remark_text: Option<String>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("Database error: {0}")]
+    Database(String),
+    #[error("Not found")]
+    NotFound,
+    #[error("Unknown error")]
+    Unknown,
 }
