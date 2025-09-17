@@ -1,9 +1,9 @@
-use log::info;
-use dotenv;
-use pretty_env_logger;
 use csv::ReaderBuilder;
-use sqlx::PgPool;
+use dotenv;
+use log::info;
 use perf_dashboard::domain::perf::PerfRow;
+use pretty_env_logger;
+use sqlx::PgPool;
 
 use anyhow;
 
@@ -50,8 +50,12 @@ async fn main() {
     dotenv::dotenv().ok();
     info!("Starting import...");
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let pool = PgPool::connect(&database_url).await.expect("Failed to connect to DB");
-    let csv_path = std::env::args().nth(1).expect("Please provide CSV path as argument");
+    let pool = PgPool::connect(&database_url)
+        .await
+        .expect("Failed to connect to DB");
+    let csv_path = std::env::args()
+        .nth(1)
+        .expect("Please provide CSV path as argument");
     info!("Importing {}...", csv_path);
     import_csv(&pool, &csv_path).await.expect("Import failed");
     info!("Import finished.");
