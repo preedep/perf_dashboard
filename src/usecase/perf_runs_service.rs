@@ -7,6 +7,7 @@ use log::error;
 use sqlx::Arguments;
 use sqlx::PgPool;
 use sqlx::Row;
+use sqlx::query as sqlx_query;
 
 pub struct PerfRunsService {
     pub pool: PgPool,
@@ -44,7 +45,7 @@ impl PerfRunsService {
             }
             // Add more filters here as needed
         }
-        let rows = sqlx::query_with(&query, args)
+        let rows = sqlx_query(&query)
             .fetch_all(&self.pool)
             .await
             .unwrap_or_default();
@@ -67,24 +68,68 @@ impl PerfRunsService {
     }
 
     pub async fn get_by_id(&self, row_no: i64) -> Option<crate::domain::perf::PerfRow> {
-        // TODO: Implement logic to fetch a single PerfRow by row_no from the database or repository
-        None
+        let row = sqlx_query(
+            r#"SELECT release_tag, row_no, test_scenario, p95_latency_ms,
+             avg_tps, peak_tps, failed_txn_pct, failed_txn_count, total_txn_count,
+              baseline_avg_tps, test_result_text, remark_text FROM perf_runs WHERE row_no = $1"#
+        )
+        .bind(row_no)
+        .fetch_optional(&self.pool)
+        .await
+        .ok()??;
+
+        Some(crate::domain::perf::PerfRow {
+            release_tag: row.try_get("release_tag").ok().unwrap_or_default(),
+            row_no: row.try_get("row_no").ok(),
+            test_scenario: row.try_get("test_scenario").ok(),
+            p95_latency_ms: row.try_get("p95_latency_ms").ok(),
+            avg_tps: row.try_get("avg_tps").ok(),
+            peak_tps: row.try_get("peak_tps").ok(),
+            failed_txn_pct: row.try_get("failed_txn_pct").ok(),
+            failed_txn_count: row.try_get("failed_txn_count").ok(),
+            total_txn_count: row.try_get("total_txn_count").ok(),
+            baseline_avg_tps: row.try_get("baseline_avg_tps").ok(),
+            test_result_text: row.try_get("test_result_text").ok(),
+            remark_text: row.try_get("remark_text").ok(),
+        })
     }
 
     pub async fn summary(&self) -> PerfSummary {
-        // TODO: Implement logic to summarize all runs (e.g., count, avg tps, avg latency)
+        let row = sqlx_query(
+            r#"SELECT COUNT(*) as total_runs,
+                AVG(avg_tps) as avg_tps,
+                AVG(p95_latency_ms) as avg_latency_ms
+            FROM perf_runs"#
+        )
+        .fetch_one(&self.pool)
+        .await
+        .ok();
+
         PerfSummary {
-            total_runs: 0,
-            avg_tps: None,
-            avg_latency_ms: None,
+            total_runs: row.as_ref().and_then(|r| r.try_get::<i64, _>("total_runs").ok()).unwrap_or(0) as usize,
+            avg_tps: row.as_ref().and_then(|r| r.try_get::<f64, _>("avg_tps").ok()),
+            avg_latency_ms: row.as_ref().and_then(|r| r.try_get::<f64, _>("avg_latency_ms").ok()),
         }
     }
 
     pub async fn trends(&self) -> PerfTrends {
-        // TODO: Implement logic to compute trends over time (e.g., tps over releases)
-        PerfTrends {
-            trend_points: vec![],
-        }
+        let rows = sqlx_query(
+            r#"SELECT release_tag, AVG(avg_tps) as avg_tps
+                FROM perf_runs
+                GROUP BY release_tag
+                ORDER BY release_tag"#
+        )
+        .fetch_all(&self.pool)
+        .await
+        .unwrap_or_default();
+
+        let trend_points = rows.into_iter().filter_map(|row| {
+            let label = row.try_get::<String, _>("release_tag").ok()?;
+            let value = row.try_get::<f64, _>("avg_tps").ok()?;
+            Some((label, value))
+        }).collect();
+
+        PerfTrends { trend_points }
     }
 
     pub async fn import(&self, new_run: PerfRow) -> Result<(), Error> {
