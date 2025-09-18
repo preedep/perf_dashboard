@@ -29,6 +29,27 @@ function showScenario(idx) {
   }
 }
 
+function syncHighlight(idx) {
+  if (latencyChart && failRateChart) {
+    latencyChart.setActiveElements([{datasetIndex: 0, index: idx}]);
+    failRateChart.setActiveElements([{datasetIndex: 0, index: idx}]);
+    latencyChart.tooltip.setActiveElements([{datasetIndex: 0, index: idx}], {x:0,y:0});
+    failRateChart.tooltip.setActiveElements([{datasetIndex: 0, index: idx}], {x:0,y:0});
+    latencyChart.update();
+    failRateChart.update();
+  }
+  if (tpsChart) {
+    tpsChart.setActiveElements([
+      {datasetIndex: 0, index: idx},
+      {datasetIndex: 1, index: idx},
+      {datasetIndex: 2, index: idx}
+    ]);
+    tpsChart.tooltip.setActiveElements([{datasetIndex: 0, index: idx}], {x:0,y:0});
+    tpsChart.update();
+  }
+  showScenario(idx);
+}
+
 function renderTPSChart(data) {
   const ctx = document.getElementById('tpsChart').getContext('2d');
   tpsChart = new Chart(ctx, {
@@ -42,7 +63,9 @@ function renderTPSChart(data) {
           borderColor: '#8884d8',
           backgroundColor: 'rgba(136,132,216,0.1)',
           fill: false,
-          tension: 0.1
+          tension: 0.1,
+          pointRadius: 7,
+          pointHoverRadius: 10
         },
         {
           label: 'Peak TPS',
@@ -50,7 +73,9 @@ function renderTPSChart(data) {
           borderColor: '#ff9800',
           backgroundColor: 'rgba(255,152,0,0.1)',
           fill: false,
-          tension: 0.1
+          tension: 0.1,
+          pointRadius: 7,
+          pointHoverRadius: 10
         },
         {
           label: 'Baseline Avg TPS',
@@ -59,32 +84,28 @@ function renderTPSChart(data) {
           backgroundColor: 'rgba(67,160,71,0.1)',
           borderDash: [6,3],
           fill: false,
-          tension: 0.1
+          tension: 0.1,
+          pointRadius: 7,
+          pointHoverRadius: 10
         }
       ]
     },
     options: {
       responsive: true,
       plugins: {
-        legend: { position: 'top' },
-        title: { display: false }
+        legend: { position: 'top', labels: {font: {size: 16}} },
+        title: { display: false },
+        tooltip: { enabled: true, bodyFont: {size: 16}, titleFont: {size: 16} }
       },
       scales: {
-        x: { title: { display: true, text: 'Release Tag' } },
-        y: { title: { display: true, text: 'TPS' } }
+        x: { title: { display: true, text: 'Release Tag', font: {size: 16} }, ticks: {font: {size: 14}} },
+        y: { title: { display: true, text: 'TPS', font: {size: 16} }, ticks: {font: {size: 14}} }
       },
+      interaction: { mode: 'nearest', intersect: true },
       onClick: (evt, elements) => {
         if (elements.length) {
           const idx = elements[0].index;
-          if (latencyChart && failRateChart) {
-            latencyChart.setActiveElements([{datasetIndex: 0, index: idx}]);
-            failRateChart.setActiveElements([{datasetIndex: 0, index: idx}]);
-            latencyChart.tooltip.setActiveElements([{datasetIndex: 0, index: idx}], {x:0,y:0});
-            failRateChart.tooltip.setActiveElements([{datasetIndex: 0, index: idx}], {x:0,y:0});
-            latencyChart.update();
-            failRateChart.update();
-          }
-          showScenario(idx);
+          syncHighlight(idx);
         }
       }
     }
@@ -103,18 +124,28 @@ function renderLatencyChart(data) {
         borderColor: '#82ca9d',
         backgroundColor: 'rgba(130,202,157,0.1)',
         fill: true,
-        tension: 0.1
+        tension: 0.1,
+        pointRadius: 7,
+        pointHoverRadius: 10
       }]
     },
     options: {
       responsive: true,
       plugins: {
-        legend: { position: 'top' },
-        title: { display: false }
+        legend: { position: 'top', labels: {font: {size: 16}} },
+        title: { display: false },
+        tooltip: { enabled: true, bodyFont: {size: 16}, titleFont: {size: 16} }
       },
       scales: {
-        x: { title: { display: true, text: 'Release Tag' } },
-        y: { title: { display: true, text: 'Latency (ms)' } }
+        x: { title: { display: true, text: 'Release Tag', font: {size: 16} }, ticks: {font: {size: 14}} },
+        y: { title: { display: true, text: 'Latency (ms)', font: {size: 16} }, ticks: {font: {size: 14}} }
+      },
+      interaction: { mode: 'nearest', intersect: true },
+      onClick: (evt, elements) => {
+        if (elements.length) {
+          const idx = elements[0].index;
+          syncHighlight(idx);
+        }
       }
     }
   });
@@ -132,18 +163,28 @@ function renderFailRateChart(data) {
         borderColor: '#e53935',
         backgroundColor: 'rgba(229,57,53,0.1)',
         fill: true,
-        tension: 0.1
+        tension: 0.1,
+        pointRadius: 7,
+        pointHoverRadius: 10
       }]
     },
     options: {
       responsive: true,
       plugins: {
-        legend: { position: 'top' },
-        title: { display: false }
+        legend: { position: 'top', labels: {font: {size: 16}} },
+        title: { display: false },
+        tooltip: { enabled: true, bodyFont: {size: 16}, titleFont: {size: 16} }
       },
       scales: {
-        x: { title: { display: true, text: 'Release Tag' } },
-        y: { title: { display: true, text: 'Failed Rate (%)' } }
+        x: { title: { display: true, text: 'Release Tag', font: {size: 16} }, ticks: {font: {size: 14}} },
+        y: { title: { display: true, text: 'Failed Rate (%)', font: {size: 16} }, ticks: {font: {size: 14}} }
+      },
+      interaction: { mode: 'nearest', intersect: true },
+      onClick: (evt, elements) => {
+        if (elements.length) {
+          const idx = elements[0].index;
+          syncHighlight(idx);
+        }
       }
     }
   });
@@ -155,4 +196,8 @@ fetchPerfRuns().then(raw => {
   renderTPSChart(data);
   renderLatencyChart(data);
   renderFailRateChart(data);
+  // default: highlight and show scenario for first point if exists
+  if (data.length > 0) {
+    syncHighlight(0);
+  }
 });
