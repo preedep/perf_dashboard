@@ -10,7 +10,24 @@
 <body>
   <div class="container mt-5">
     <h2 class="mb-4">Performance Test Trends</h2>
-    <canvas id="perfChart" height="100"></canvas>
+    <div class="row">
+      <div class="col-md-12">
+        <h5>Average TPS by Release</h5>
+        <canvas id="tpsChart" height="100"></canvas>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-md-12">
+        <h5>P95 Latency (ms) by Release</h5>
+        <canvas id="latencyChart" height="100"></canvas>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-md-12">
+        <h5>Failed Rate (%) by Release</h5>
+        <canvas id="failRateChart" height="100"></canvas>
+      </div>
+    </div>
   </div>
   <script src="dashboard.js"></script>
 </body>
