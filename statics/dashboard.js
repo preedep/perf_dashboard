@@ -1,4 +1,5 @@
-// dashboard.js
+let tpsChart, latencyChart, failRateChart;
+
 async function fetchPerfRuns() {
   const res = await fetch('/api/perf-runs');
   return await res.json();
@@ -17,7 +18,7 @@ function prepareData(data) {
 
 function renderTPSChart(data) {
   const ctx = document.getElementById('tpsChart').getContext('2d');
-  new Chart(ctx, {
+  tpsChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: data.map(row => row.x_label),
@@ -58,6 +59,19 @@ function renderTPSChart(data) {
       scales: {
         x: { title: { display: true, text: 'Release Tag' } },
         y: { title: { display: true, text: 'TPS' } }
+      },
+      onClick: (evt, elements) => {
+        if (elements.length) {
+          const idx = elements[0].index;
+          if (latencyChart && failRateChart) {
+            latencyChart.setActiveElements([{datasetIndex: 0, index: idx}]);
+            failRateChart.setActiveElements([{datasetIndex: 0, index: idx}]);
+            latencyChart.tooltip.setActiveElements([{datasetIndex: 0, index: idx}], {x:0,y:0});
+            failRateChart.tooltip.setActiveElements([{datasetIndex: 0, index: idx}], {x:0,y:0});
+            latencyChart.update();
+            failRateChart.update();
+          }
+        }
       }
     }
   });
@@ -65,7 +79,7 @@ function renderTPSChart(data) {
 
 function renderLatencyChart(data) {
   const ctx = document.getElementById('latencyChart').getContext('2d');
-  new Chart(ctx, {
+  latencyChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: data.map(row => row.x_label),
@@ -94,7 +108,7 @@ function renderLatencyChart(data) {
 
 function renderFailRateChart(data) {
   const ctx = document.getElementById('failRateChart').getContext('2d');
-  new Chart(ctx, {
+  failRateChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: data.map(row => row.x_label),
