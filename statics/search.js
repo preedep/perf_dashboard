@@ -23,10 +23,26 @@ function renderTable(data) {
     const tr = document.createElement('tr');
     Object.keys(row).forEach(key => {
       const td = document.createElement('td');
-      td.textContent = row[key];
+      let value = row[key];
+      if (value === null || value === undefined || value === 'null') value = '';
+      td.innerHTML = String(value).replace(/\n/g, '<br>');
+      td.style.whiteSpace = 'pre-line';
       tr.appendChild(td);
     });
     tableBody.appendChild(tr);
+  });
+  // Init DataTable (destroy previous if exists)
+  if ($.fn.DataTable.isDataTable('#perfTable')) {
+    $('#perfTable').DataTable().destroy();
+  }
+  $('#perfTable').DataTable({
+    paging: true,
+    searching: false,
+    info: true,
+    scrollX: true,
+    colReorder: true,
+    colResize: true,
+    autoWidth: false
   });
 }
 
