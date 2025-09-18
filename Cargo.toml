@@ -2,11 +2,23 @@
 name = "perf_dashboard"
 version = "0.1.0"
 edition = "2024"
+default-run = "perf_dashboard"
+
+[[bin]]
+name = "perf_dashboard"
+path = "src/main.rs"
+
+[[bin]]
+name = "import_data_set"
+path = "src/bin/import_data_set.rs"
+
 
 [dependencies]
 pretty_env_logger = "0.5"
 dotenv = "0.15"
 actix-web = "4"
+actix-files = "0.6"
+
 log = "0.4"
 serde = { version = "1" , features = ["derive"] }
 serde_json = { version = "1" }
@@ -14,5 +26,4 @@ csv = "1.3"
 sqlx = { version = "0.8" , features = ["postgres","runtime-tokio","json"] }
 anyhow = "1.0"
 tokio = {version = "1" , features = ["full"]}
-
-
+thiserror = "2.0"
