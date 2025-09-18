@@ -46,11 +46,33 @@ function calcTableHeight() {
   return Math.floor(window.innerHeight * 0.8) + 'px';
 }
 
+let tabulatorTable;
+let allColumns = [];
+
+function renderColumnDropdown() {
+  const menu = document.getElementById('columnDropdownMenu');
+  menu.innerHTML = '';
+  if (!tabulatorTable) return;
+  tabulatorTable.getColumns().forEach(colObj => {
+    const col = colObj.getField();
+    if (!col) return;
+    const checked = colObj.isVisible();
+    menu.innerHTML += `<li><label class='dropdown-item'><input type='checkbox' class='me-2' data-col='${col}' ${checked ? 'checked' : ''}>${col}</label></li>`;
+  });
+  menu.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', e => {
+      const col = e.target.getAttribute('data-col');
+      tabulatorTable.toggleColumn(col);
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('filterForm').reset();
   await populateReleaseTagDropdown();
   let allData = await fetchPerfRunsServer();
   const columns = buildTabulatorColumns(allData);
+  allColumns = columns.map(col => col.field);
   tabulatorTable = new Tabulator('#perfTable', {
     data: allData,
     columns: columns,
@@ -84,6 +106,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     const filtered = await fetchPerfRunsServer(filters);
     tabulatorTable.setData(filtered);
+  });
+
+  document.getElementById('columnMenuBtn').addEventListener('shown.bs.dropdown', function() {
+    renderColumnDropdown();
   });
 });
 
