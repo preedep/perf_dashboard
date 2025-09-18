@@ -3,47 +3,21 @@ async function fetchPerfRuns() {
   return await res.json();
 }
 
-function renderTable(data) {
-  const tableHeader = document.getElementById('tableHeader');
-  const tableBody = document.getElementById('tableBody');
-  tableHeader.innerHTML = '';
-  tableBody.innerHTML = '';
-  if (!data.length) {
-    tableBody.innerHTML = '<tr><td colspan="99" class="text-center">No data</td></tr>';
-    return;
-  }
-  // Render headers
-  Object.keys(data[0]).forEach(key => {
-    const th = document.createElement('th');
-    th.textContent = key;
-    tableHeader.appendChild(th);
-  });
-  // Render rows
-  data.forEach(row => {
-    const tr = document.createElement('tr');
-    Object.keys(row).forEach(key => {
-      const td = document.createElement('td');
-      let value = row[key];
+function buildTabulatorColumns(data) {
+  if (!data.length) return [];
+  return Object.keys(data[0]).map(key => ({
+    title: key,
+    field: key,
+    headerFilter: false,
+    widthGrow: 1,
+    resizable: true,
+    headerSort: true,
+    formatter: function(cell) {
+      let value = cell.getValue();
       if (value === null || value === undefined || value === 'null') value = '';
-      td.innerHTML = String(value).replace(/\n/g, '<br>');
-      td.style.whiteSpace = 'pre-line';
-      tr.appendChild(td);
-    });
-    tableBody.appendChild(tr);
-  });
-  // Init DataTable (destroy previous if exists)
-  if ($.fn.DataTable.isDataTable('#perfTable')) {
-    $('#perfTable').DataTable().destroy();
-  }
-  $('#perfTable').DataTable({
-    paging: true,
-    searching: false,
-    info: true,
-    scrollX: true,
-    colReorder: true,
-    colResize: true,
-    autoWidth: false
-  });
+      return String(value).replace(/\n/g, '<br>');
+    }
+  }));
 }
 
 function filterData(data, filters) {
@@ -57,9 +31,36 @@ function filterData(data, filters) {
   });
 }
 
+let tabulatorTable;
+
+function calcTableHeight() {
+  // ให้ table สูงประมาณ 80% ของ viewport
+  return Math.floor(window.innerHeight * 0.8) + 'px';
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   let allData = await fetchPerfRuns();
-  renderTable(allData);
+  const columns = buildTabulatorColumns(allData);
+  tabulatorTable = new Tabulator('#perfTable', {
+    data: allData,
+    columns: columns,
+    layout: 'fitColumns',
+    movableColumns: true,
+    resizableColumns: true,
+    height: calcTableHeight(),
+    pagination: true,
+    paginationSize: 20,
+    paginationSizeSelector: [10, 20, 50, 100],
+    placeholder: 'No data',
+    autoColumns: false,
+    columnDefaults: { resizable: true, headerSort: true },
+    responsiveLayout: 'collapse',
+    responsiveLayoutCollapseStartOpen: false
+  });
+
+  window.addEventListener('resize', () => {
+    tabulatorTable.setHeight(calcTableHeight());
+  });
 
   document.getElementById('filterForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -72,6 +73,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       failed_txn_pct_max: form.failed_txn_pct_max.value
     };
     const filtered = filterData(allData, filters);
-    renderTable(filtered);
+    tabulatorTable.setData(filtered);
   });
 });
