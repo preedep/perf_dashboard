@@ -28,29 +28,18 @@ function buildTabulatorColumns(data) {
   }));
 }
 
-function filterData(data, filters) {
-  return data.filter(row => {
-    if (filters.release_tag && !String(row.release_tag).includes(filters.release_tag)) return false;
-    if (filters.avg_tps_min && Number(row.avg_tps) < Number(filters.avg_tps_min)) return false;
-    if (filters.avg_tps_max && Number(row.avg_tps) > Number(filters.avg_tps_max)) return false;
-    if (filters.p95_latency_max && Number(row.p95_latency_ms) > Number(filters.p95_latency_max)) return false;
-    if (filters.failed_txn_pct_max && Number(row.failed_txn_pct) * 100 > Number(filters.failed_txn_pct_max)) return false;
-    return true;
-  });
+async function fetchPerfRunsServer(filters = {}) {
+  const params = new URLSearchParams();
+  if (filters.release_tag) params.append('release_tag', filters.release_tag);
+  if (filters.avg_tps_min) params.append('min_avg_tps', filters.avg_tps_min);
+  if (filters.avg_tps_max) params.append('max_avg_tps', filters.avg_tps_max);
+  if (filters.p95_latency_max) params.append('max_p95_latency_ms', filters.p95_latency_max);
+  if (filters.failed_txn_pct_max) params.append('max_failed_txn_pct', filters.failed_txn_pct_max);
+  // test_scenario, min_p95_latency_ms, etc. สามารถเพิ่มได้
+  const url = '/api/perf-runs' + (params.toString() ? '?' + params.toString() : '');
+  const res = await fetch(url);
+  return await res.json();
 }
-
-async function populateReleaseTagDropdown() {
-  const select = document.getElementById('releaseTagSelect');
-  const tags = await fetchReleaseTags();
-  tags.forEach(tag => {
-    const opt = document.createElement('option');
-    opt.value = tag;
-    opt.textContent = tag;
-    select.appendChild(opt);
-  });
-}
-
-let tabulatorTable;
 
 function calcTableHeight() {
   // ให้ table สูงประมาณ 80% ของ viewport
@@ -60,7 +49,7 @@ function calcTableHeight() {
 document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('filterForm').reset();
   await populateReleaseTagDropdown();
-  let allData = await fetchPerfRuns();
+  let allData = await fetchPerfRunsServer();
   const columns = buildTabulatorColumns(allData);
   tabulatorTable = new Tabulator('#perfTable', {
     data: allData,
@@ -83,7 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     tabulatorTable.setHeight(calcTableHeight());
   });
 
-  document.getElementById('filterForm').addEventListener('submit', function(e) {
+  document.getElementById('filterForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const form = e.target;
     const filters = {
@@ -93,7 +82,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       p95_latency_max: form.p95_latency_max.value,
       failed_txn_pct_max: form.failed_txn_pct_max.value
     };
-    const filtered = filterData(allData, filters);
+    const filtered = await fetchPerfRunsServer(filters);
     tabulatorTable.setData(filtered);
   });
 });
+
+async function populateReleaseTagDropdown() {
+  const select = document.getElementById('releaseTagSelect');
+  const tags = await fetchReleaseTags();
+  tags.forEach(tag => {
+    const opt = document.createElement('option');
+    opt.value = tag;
+    opt.textContent = tag;
+    select.appendChild(opt);
+  });
+}

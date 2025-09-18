@@ -1,12 +1,15 @@
 use actix_web::{get, web, HttpResponse, Responder};
-use crate::domain::perf::{PerfSummary, PerfTrends};
+use crate::domain::perf::{PerfSummary, PerfTrends, PerfRunFilter};
 use crate::usecase::perf_runs_service::PerfRunsService;
 use sqlx::PgPool;
 
 #[get("/api/perf-runs")]
-pub async fn list_perf_runs(pool: web::Data<PgPool>) -> impl Responder {
+pub async fn list_perf_runs(
+    pool: web::Data<PgPool>,
+    query: web::Query<PerfRunFilter>
+) -> impl Responder {
     let service = PerfRunsService { pool: pool.get_ref().clone() };
-    let runs = service.list(None).await;
+    let runs = service.list(Some(query.into_inner())).await;
     HttpResponse::Ok().json(runs)
 }
 

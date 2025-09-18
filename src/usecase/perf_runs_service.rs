@@ -22,13 +22,6 @@ impl PerfRunsService {
         &self,
         filter: Option<crate::domain::perf::PerfRunFilter>,
     ) -> Vec<crate::domain::perf::PerfRow> {
-        debug!("[list] filter: {:?}", filter);
-        let conn = self
-            .pool
-            .acquire()
-            .await
-            .expect("Failed to acquire connection");
-        debug!("[list] acquired db connection");
         let mut query = String::from(
             r#"SELECT release_tag, row_no, test_scenario,
                  p95_latency_ms, avg_tps, peak_tps, failed_txn_pct,
@@ -36,23 +29,43 @@ impl PerfRunsService {
                  FROM perf_runs_normalized WHERE 1=1"#,
         );
         let mut args = sqlx::postgres::PgArguments::default();
+        let mut idx = 1;
         if let Some(f) = &filter {
             if let Some(ref release_tag) = f.release_tag {
-                query.push_str(" AND release_tag = $1");
-                debug!("[list] filter by release_tag: {}", release_tag);
-                if let Err(e) = args.add(release_tag) {
-                    error!("Error adding argument: {}", e);
-                    // You may want to handle this error more robustly (e.g., return early)
-                }
+                query.push_str(&format!(" AND release_tag = ${}", idx));
+                args.add(release_tag);
+                idx += 1;
             }
-            // Add more filters here as needed
+            if let Some(min_avg_tps) = f.min_avg_tps {
+                query.push_str(&format!(" AND avg_tps >= ${}", idx));
+                args.add(min_avg_tps);
+                idx += 1;
+            }
+            if let Some(max_avg_tps) = f.max_avg_tps {
+                query.push_str(&format!(" AND avg_tps <= ${}", idx));
+                args.add(max_avg_tps);
+                idx += 1;
+            }
+            if let Some(min_p95_latency_ms) = f.min_p95_latency_ms {
+                query.push_str(&format!(" AND p95_latency_ms >= ${}", idx));
+                args.add(min_p95_latency_ms);
+                idx += 1;
+            }
+            if let Some(max_p95_latency_ms) = f.max_p95_latency_ms {
+                query.push_str(&format!(" AND p95_latency_ms <= ${}", idx));
+                args.add(max_p95_latency_ms);
+                idx += 1;
+            }
+            if let Some(ref test_scenario) = f.test_scenario {
+                query.push_str(&format!(" AND test_scenario ILIKE ${}", idx));
+                args.add(format!("%{}%", test_scenario));
+                idx += 1;
+            }
         }
-        debug!("[list] final query: {}", query);
-        let rows = sqlx_query(&query)
+        let rows = sqlx::query_with(&query, args)
             .fetch_all(&self.pool)
             .await
             .unwrap_or_default();
-        debug!("[list] rows fetched: {}", rows.len());
         rows.into_iter()
             .map(|row| PerfRow {
                 release_tag: row.try_get("release_tag").ok().unwrap_or_default(),
