@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Performance Data Search</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background: #f8f9fa; }
+    .search-header { margin-top: 2rem; margin-bottom: 2rem; }
+    .search-panel { background: #fff; border-radius: 8px; padding: 1.5rem 1.5rem 0.5rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .table-responsive { margin-top: 2rem; }
+    th, td { font-size: 0.98rem; }
+    .search-btn { min-width: 120px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center search-header">
+      <h2>Search Performance Data</h2>
+      <a href="index.html" class="btn btn-outline-primary">Back to Dashboard</a>
+    </div>
+    <div class="search-panel mb-4">
+      <form id="filterForm" class="row g-3 align-items-end">
+        <div class="col-md-2">
+          <label class="form-label">Release Tag</label>
+          <input type="text" class="form-control" name="release_tag">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Avg TPS ≥</label>
+          <input type="number" class="form-control" name="avg_tps_min" step="any">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Avg TPS ≤</label>
+          <input type="number" class="form-control" name="avg_tps_max" step="any">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">P95 Latency ≤ (ms)</label>
+          <input type="number" class="form-control" name="p95_latency_max" step="any">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Failed Rate ≤ (%)</label>
+          <input type="number" class="form-control" name="failed_txn_pct_max" step="any">
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary search-btn">Search</button>
+        </div>
+      </form>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered align-middle" id="perfTable">
+        <thead class="table-light">
+          <tr id="tableHeader"></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <script src="search.js"></script>
+</body>
+</html>
