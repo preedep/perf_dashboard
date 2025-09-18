@@ -21,7 +21,7 @@ where
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct PerfRow {
     pub release_tag: String,
     #[serde(deserialize_with = "crate::domain::perf::parse_row_no")]

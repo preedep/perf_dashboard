@@ -1,1 +1,1 @@
-mod perf_runs_service;
+pub mod perf_runs_service;
