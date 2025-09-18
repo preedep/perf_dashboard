@@ -1,4 +1,5 @@
 let tpsChart, latencyChart, failRateChart;
+let currentData = [];
 
 async function fetchPerfRuns() {
   const res = await fetch('/api/perf-runs');
@@ -14,6 +15,18 @@ function prepareData(data) {
     baseline_avg_tps: Number(row.baseline_avg_tps),
     failed_txn_pct: Number(row.failed_txn_pct)
   }));
+}
+
+function showScenario(idx) {
+  const card = document.getElementById('scenarioCard');
+  const text = document.getElementById('scenarioText');
+  if (currentData[idx] && currentData[idx].test_scenario) {
+    text.textContent = currentData[idx].test_scenario;
+    card.style.display = '';
+  } else {
+    text.textContent = '';
+    card.style.display = 'none';
+  }
 }
 
 function renderTPSChart(data) {
@@ -71,6 +84,7 @@ function renderTPSChart(data) {
             latencyChart.update();
             failRateChart.update();
           }
+          showScenario(idx);
         }
       }
     }
@@ -137,6 +151,7 @@ function renderFailRateChart(data) {
 
 fetchPerfRuns().then(raw => {
   const data = prepareData(raw);
+  currentData = data;
   renderTPSChart(data);
   renderLatencyChart(data);
   renderFailRateChart(data);

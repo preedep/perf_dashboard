@@ -23,9 +23,19 @@
       </div>
     </div>
     <div class="row mt-4">
-      <div class="col-md-12">
+      <div class="col-md-9">
         <h5>Failed Rate (%) by Release</h5>
         <canvas id="failRateChart" height="100"></canvas>
+      </div>
+      <div class="col-md-3">
+        <div class="card" id="scenarioCard" style="display:none;">
+          <div class="card-header bg-info text-white">
+            <b>Test Scenario</b>
+          </div>
+          <div class="card-body">
+            <pre id="scenarioText" style="white-space:pre-wrap;word-break:break-all;"></pre>
+          </div>
+        </div>
       </div>
     </div>
   </div>
