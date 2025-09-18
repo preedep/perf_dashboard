@@ -32,7 +32,9 @@
       <form id="filterForm" class="row g-3 align-items-end">
         <div class="col-md-2">
           <label class="form-label">Release Tag</label>
-          <input type="text" class="form-control" name="release_tag">
+          <select class="form-select" name="release_tag" id="releaseTagSelect">
+            <option value="">All</option>
+          </select>
         </div>
         <div class="col-md-2">
           <label class="form-label">Avg TPS ≥</label>

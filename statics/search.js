@@ -3,6 +3,14 @@ async function fetchPerfRuns() {
   return await res.json();
 }
 
+async function fetchReleaseTags() {
+  const res = await fetch('/api/perf-runs');
+  const data = await res.json();
+  // get unique release_tag, remove null/empty
+  const tags = [...new Set(data.map(r => r.release_tag).filter(Boolean))];
+  return tags.sort();
+}
+
 function buildTabulatorColumns(data) {
   if (!data.length) return [];
   return Object.keys(data[0]).map(key => ({
@@ -31,6 +39,17 @@ function filterData(data, filters) {
   });
 }
 
+async function populateReleaseTagDropdown() {
+  const select = document.getElementById('releaseTagSelect');
+  const tags = await fetchReleaseTags();
+  tags.forEach(tag => {
+    const opt = document.createElement('option');
+    opt.value = tag;
+    opt.textContent = tag;
+    select.appendChild(opt);
+  });
+}
+
 let tabulatorTable;
 
 function calcTableHeight() {
@@ -39,6 +58,8 @@ function calcTableHeight() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('filterForm').reset();
+  await populateReleaseTagDropdown();
   let allData = await fetchPerfRuns();
   const columns = buildTabulatorColumns(allData);
   tabulatorTable = new Tabulator('#perfTable', {

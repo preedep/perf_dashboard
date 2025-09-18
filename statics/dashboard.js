@@ -190,6 +190,13 @@ function renderFailRateChart(data) {
   });
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+  // Reset scenario card and highlight on every load
+  const card = document.getElementById('scenarioCard');
+  if (card) card.style.display = 'none';
+  // Optionally: reset chart highlights here if needed
+});
+
 fetchPerfRuns().then(raw => {
   const data = prepareData(raw);
   currentData = data;
