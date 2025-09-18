@@ -5,8 +5,8 @@ use dotenv;
 use log::info;
 use pretty_env_logger;
 use perf_dashboard::interface::api;
-
-
+use actix_files as fs;
+use actix_files::Files;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -24,6 +24,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(actix_web::web::Data::new(pool.clone()))
             .configure(api::config)
+            .service(fs::Files::new("/", "./statics").index_file("index.html"))
     })
     .bind(("0.0.0.0", 8080))?
     .run()
