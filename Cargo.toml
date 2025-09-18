@@ -2,6 +2,16 @@
 name = "perf_dashboard"
 version = "0.1.0"
 edition = "2024"
+default-run = "perf_dashboard"
+
+[[bin]]
+name = "perf_dashboard"
+path = "src/main.rs"
+
+[[bin]]
+name = "import_data_set"
+path = "src/bin/import_data_set.rs"
+
 
 [dependencies]
 pretty_env_logger = "0.5"
